@@ -7,7 +7,9 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 import time
 import json
-from Trie import Trie
+
+from response_bot import get_reply
+
 
 root = tk.Tk()
 root.title("Zalo Bot Control Panel")
@@ -26,11 +28,6 @@ ser = Service(path)
 driver = None  
 
 
-chrome_options = Options()
-chrome_options.add_argument("user-data-dir=./user_data")  
-chrome_options.add_argument("--profile-directory=Default")  
-
-
 def start_bot():
     global bot_running, driver
     if bot_running:
@@ -39,39 +36,19 @@ def start_bot():
     bot_running = True
     status_label.config(text="Status: Running", fg="green")
 
-    driver = webdriver.Chrome(service=ser, options=chrome_options)
+    driver = webdriver.Chrome()
     driver.get("https://chat.zalo.me")
     
     print("Vui lòng đăng nhập vào Zalo và nhấn Enter khi hoàn tất...")
     time.sleep(15)
 
-    trie = Trie()
-
-    try:
-        with open('bot_data.json', 'r', encoding='utf-8') as file:
-            bot_data = json.load(file)
-            for keyword, response in bot_data.items():
-                trie.insert(keyword, response)
-    except FileNotFoundError:
-        bot_data = {}
-
-    print("Load trie thành công")
-
-    def save_bot_data():
-        with open('bot_data.json', 'w', encoding='utf-8') as file:
-            json.dump(bot_data, file, ensure_ascii=False, indent=4)
+    print("Bot đang chạy...")
 
     def learn_and_respond(message):
-        response = trie.search(message.strip().lower())
-        
+        response = get_reply(message)
         if response:
-            return response[len(response) - 1]
-        
-        response = ""
-        bot_data[message.strip().lower()] = response
-        trie.insert(message.strip().lower(), response)
-        save_bot_data()
-        return response
+            return response
+        return "Tôi không hiểu bạn đang nói gì, bạn thử hỏi lại xem?"
 
     textResponse = ''
 
